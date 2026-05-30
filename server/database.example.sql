@@ -1,0 +1,2 @@
+-- Copia este archivo a database.sql
+-- Completa tus credenciales y datos iniciales antes de ejecutar
