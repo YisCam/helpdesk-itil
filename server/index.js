@@ -2,11 +2,16 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+const authRoutes = require('./routes/authRoutes');
+
 const app = express();
 
 // ── Middlewares globales ──────────────────────
 app.use(cors());
 app.use(express.json());
+
+// ── Rutas ─────────────────────────────────────
+app.use('/api/auth', authRoutes);
 
 // ── Ruta de salud ─────────────────────────────
 app.get('/api/health', (req, res) => {
