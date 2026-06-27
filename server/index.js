@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 // ── Rutas ─────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/tickets', ticketRoutes);
 
 // ── Ruta de salud ─────────────────────────────
 app.get('/api/health', (req, res) => {
