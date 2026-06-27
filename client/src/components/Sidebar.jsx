@@ -1,13 +1,27 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const usuario = JSON.parse(localStorage.getItem('usuario'));
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     navigate('/login');
+  };
+
+  const navItem = (icon, label, path) => {
+    const active = location.pathname === path;
+    return (
+      <div
+        onClick={() => navigate(path)}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer transition-colors
+          ${active ? 'bg-[#4A90D9]/20 text-[#4A90D9]' : 'text-[#90AECB] hover:bg-white/5'}`}
+      >
+        {icon} {label}
+      </div>
+    );
   };
 
   return (
@@ -19,19 +33,19 @@ function Sidebar() {
 
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
         <p className="text-[10px] text-[#6B8FAD] uppercase tracking-widest px-2 mb-1">Principal</p>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-[#4A90D9]/20 text-[#4A90D9] text-sm cursor-pointer">📊 Dashboard</div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[#90AECB] text-sm cursor-pointer hover:bg-white/5">🎫 Tickets</div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[#90AECB] text-sm cursor-pointer hover:bg-white/5">📋 Kanban</div>
+        {navItem('📊', 'Dashboard', '/dashboard')}
+        {navItem('🎫', 'Tickets', '/tickets')}
+        {navItem('📋', 'Kanban', '/kanban')}
 
         <p className="text-[10px] text-[#6B8FAD] uppercase tracking-widest px-2 mt-4 mb-1">ITIL</p>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[#90AECB] text-sm cursor-pointer hover:bg-white/5">🔄 Cambios</div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[#90AECB] text-sm cursor-pointer hover:bg-white/5">🐛 Problemas</div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[#90AECB] text-sm cursor-pointer hover:bg-white/5">📖 Conocimiento</div>
+        {navItem('🔄', 'Cambios', '/cambios')}
+        {navItem('🐛', 'Problemas', '/problemas')}
+        {navItem('📖', 'Conocimiento', '/conocimiento')}
 
         <p className="text-[10px] text-[#6B8FAD] uppercase tracking-widest px-2 mt-4 mb-1">Administración</p>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[#90AECB] text-sm cursor-pointer hover:bg-white/5">👥 Usuarios</div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[#90AECB] text-sm cursor-pointer hover:bg-white/5">📈 Reportes</div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md text-[#90AECB] text-sm cursor-pointer hover:bg-white/5">⚙️ Configuración</div>
+        {navItem('👥', 'Usuarios', '/usuarios')}
+        {navItem('📈', 'Reportes', '/reportes')}
+        {navItem('⚙️', 'Configuración', '/configuracion')}
       </nav>
 
       <div className="flex items-center gap-2 px-4 py-4 border-t border-white/10">
