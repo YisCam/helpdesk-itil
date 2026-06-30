@@ -3,9 +3,17 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ children, rolesPermitidos }) => {
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+
+  if (!token) return <Navigate to="/login" />;
+
+  if (rolesPermitidos && !rolesPermitidos.includes(usuario?.rol)) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
 };
 
 const Proximamente = ({ titulo }) => (
@@ -34,9 +42,15 @@ function App() {
         <Route path="/cambios" element={<PrivateRoute><Proximamente titulo="Gestión de Cambios" /></PrivateRoute>} />
         <Route path="/problemas" element={<PrivateRoute><Proximamente titulo="Gestión de Problemas" /></PrivateRoute>} />
         <Route path="/conocimiento" element={<PrivateRoute><Proximamente titulo="Base de Conocimiento" /></PrivateRoute>} />
-        <Route path="/usuarios" element={<PrivateRoute><Proximamente titulo="Gestión de Usuarios" /></PrivateRoute>} />
-        <Route path="/reportes" element={<PrivateRoute><Proximamente titulo="Reportes" /></PrivateRoute>} />
-        <Route path="/configuracion" element={<PrivateRoute><Proximamente titulo="Configuración" /></PrivateRoute>} />
+        <Route path="/usuarios" element={
+          <PrivateRoute rolesPermitidos={['admin']}><Proximamente titulo="Gestión de Usuarios" /></PrivateRoute>
+        } />
+        <Route path="/reportes" element={
+          <PrivateRoute rolesPermitidos={['admin', 'tecnico']}><Proximamente titulo="Reportes" /></PrivateRoute>
+        } />
+        <Route path="/configuracion" element={
+          <PrivateRoute rolesPermitidos={['admin']}><Proximamente titulo="Configuración" /></PrivateRoute>
+        } />
         <Route path="*" element={<RutaNoEncontrada />} />
       </Routes>
     </BrowserRouter>

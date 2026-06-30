@@ -4,6 +4,7 @@ function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const rol = usuario?.rol;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -42,10 +43,14 @@ function Sidebar() {
         {navItem('🐛', 'Problemas', '/problemas')}
         {navItem('📖', 'Conocimiento', '/conocimiento')}
 
-        <p className="text-[10px] text-[#6B8FAD] uppercase tracking-widest px-2 mt-4 mb-1">Administración</p>
-        {navItem('👥', 'Usuarios', '/usuarios')}
-        {navItem('📈', 'Reportes', '/reportes')}
-        {navItem('⚙️', 'Configuración', '/configuracion')}
+        {(rol === 'admin' || rol === 'tecnico') && (
+          <>
+            <p className="text-[10px] text-[#6B8FAD] uppercase tracking-widest px-2 mt-4 mb-1">Administración</p>
+            {rol === 'admin' && navItem('👥', 'Usuarios', '/usuarios')}
+            {navItem('📈', 'Reportes', '/reportes')}
+            {rol === 'admin' && navItem('⚙️', 'Configuración', '/configuracion')}
+          </>
+        )}
       </nav>
 
       <div className="flex items-center gap-2 px-4 py-4 border-t border-white/10">
