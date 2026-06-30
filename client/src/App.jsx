@@ -1,122 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Tickets from './pages/Tickets';
+import TicketDetalle from './pages/TicketDetalle';
+
+const PrivateRoute = ({ children, rolesPermitidos }) => {
+  const token = localStorage.getItem('token');
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+
+  if (!token) return <Navigate to="/login" />;
+
+  if (rolesPermitidos && !rolesPermitidos.includes(usuario?.rol)) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
+};
+
+const Proximamente = ({ titulo }) => (
+  <div className="flex min-h-screen bg-gray-50 font-sans items-center justify-center">
+    <div className="text-center">
+      <p className="text-4xl mb-4">🚧</p>
+      <h2 className="text-lg font-medium text-[#1E3A5F]">{titulo}</h2>
+      <p className="text-sm text-gray-400 mt-2">Próximamente disponible</p>
+    </div>
+  </div>
+);
+
+const RutaNoEncontrada = () => {
+  const token = localStorage.getItem('token');
+  return token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/tickets" element={<PrivateRoute><Tickets /></PrivateRoute>} />
+        <Route path="/tickets/:id" element={<PrivateRoute><TicketDetalle /></PrivateRoute>} />
+        <Route path="/kanban" element={<PrivateRoute><Proximamente titulo="Vista Kanban" /></PrivateRoute>} />
+        <Route path="/cambios" element={<PrivateRoute><Proximamente titulo="Gestión de Cambios" /></PrivateRoute>} />
+        <Route path="/problemas" element={<PrivateRoute><Proximamente titulo="Gestión de Problemas" /></PrivateRoute>} />
+        <Route path="/conocimiento" element={<PrivateRoute><Proximamente titulo="Base de Conocimiento" /></PrivateRoute>} />
+        <Route path="/usuarios" element={
+          <PrivateRoute rolesPermitidos={['admin']}><Proximamente titulo="Gestión de Usuarios" /></PrivateRoute>
+        } />
+        <Route path="/reportes" element={
+          <PrivateRoute rolesPermitidos={['admin', 'tecnico']}><Proximamente titulo="Reportes" /></PrivateRoute>
+        } />
+        <Route path="/configuracion" element={
+          <PrivateRoute rolesPermitidos={['admin']}><Proximamente titulo="Configuración" /></PrivateRoute>
+        } />
+        <Route path="*" element={<RutaNoEncontrada />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
