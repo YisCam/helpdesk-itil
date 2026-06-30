@@ -23,7 +23,6 @@ const ticketModel = {
       query += ' AND t.asignado_a = ?';
       params.push(usuario.id);
     }
-    // admin ve todos, no se agrega filtro
 
     query += ' ORDER BY t.creado_en DESC';
 
@@ -74,6 +73,15 @@ const ticketModel = {
     await pool.query(
       'UPDATE tickets SET resolucion = ?, estado = "Resuelto" WHERE id = ? AND empresa_id = ?',
       [resolucion, id, empresa_id]
+    );
+  },
+
+  async actualizar(id, empresa_id, { titulo, descripcion, categoria, prioridad, etiquetas }) {
+    await pool.query(
+      `UPDATE tickets 
+       SET titulo = ?, descripcion = ?, categoria = ?, prioridad = ?, etiquetas = ?
+       WHERE id = ? AND empresa_id = ?`,
+      [titulo, descripcion, categoria, prioridad, etiquetas, id, empresa_id]
     );
   }
 

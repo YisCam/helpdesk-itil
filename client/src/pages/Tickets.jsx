@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import api from '../api/axios';
@@ -22,6 +23,7 @@ const badgeEstado = {
 };
 
 function Tickets() {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [filtros, setFiltros] = useState({ estado: '', prioridad: '', busqueda: '' });
   const [modal, setModal] = useState(false);
@@ -129,7 +131,11 @@ function Tickets() {
                   </tr>
                 ) : (
                   ticketsFiltrados.map(t => (
-                    <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={t.id}
+                      onClick={() => navigate(`/tickets/${t.id}`)}
+                      className="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
                       <td className="text-xs text-gray-400 py-3 px-4">{t.codigo}</td>
                       <td className="text-sm text-gray-700 py-3 px-4 max-w-xs truncate">{t.titulo}</td>
                       <td className="text-sm text-gray-600 py-3 px-4">{t.categoria}</td>

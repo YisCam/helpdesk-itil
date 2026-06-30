@@ -100,6 +100,32 @@ const ticketController = {
       console.error('Error al resolver ticket:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
+  },
+
+  async actualizar(req, res) {
+    try {
+      const { titulo, descripcion, categoria, prioridad, etiquetas } = req.body;
+
+      if (!titulo || !categoria || !prioridad) {
+        return res.status(400).json({ error: 'Título, categoría y prioridad son obligatorios' });
+      }
+
+      const categorias = ['Hardware', 'Software', 'Red', 'Accesos', 'Otro'];
+      const prioridades = ['Critica', 'Alta', 'Media', 'Baja'];
+
+      if (!categorias.includes(categoria)) {
+        return res.status(400).json({ error: 'Categoría inválida' });
+      }
+      if (!prioridades.includes(prioridad)) {
+        return res.status(400).json({ error: 'Prioridad inválida' });
+      }
+
+      await ticketModel.actualizar(req.params.id, req.usuario.empresa_id, { titulo, descripcion, categoria, prioridad, etiquetas });
+      res.json({ mensaje: 'Ticket actualizado correctamente' });
+    } catch (error) {
+      console.error('Error al actualizar ticket:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
 
 };

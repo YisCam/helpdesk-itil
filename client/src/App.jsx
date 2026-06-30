@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
+import TicketDetalle from './pages/TicketDetalle';
 
 const PrivateRoute = ({ children, rolesPermitidos }) => {
   const token = localStorage.getItem('token');
@@ -38,6 +39,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/tickets" element={<PrivateRoute><Tickets /></PrivateRoute>} />
+        <Route path="/tickets/:id" element={<PrivateRoute><TicketDetalle /></PrivateRoute>} />
         <Route path="/kanban" element={<PrivateRoute><Proximamente titulo="Vista Kanban" /></PrivateRoute>} />
         <Route path="/cambios" element={<PrivateRoute><Proximamente titulo="Gestión de Cambios" /></PrivateRoute>} />
         <Route path="/problemas" element={<PrivateRoute><Proximamente titulo="Gestión de Problemas" /></PrivateRoute>} />
