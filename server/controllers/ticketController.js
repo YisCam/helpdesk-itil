@@ -4,7 +4,7 @@ const ticketController = {
 
   async listar(req, res) {
     try {
-      const tickets = await ticketModel.listar(req.usuario.empresa_id);
+      const tickets = await ticketModel.listar(req.usuario.empresa_id, req.usuario);
       res.json(tickets);
     } catch (error) {
       console.error('Error al listar tickets:', error);

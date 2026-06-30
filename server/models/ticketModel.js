@@ -3,19 +3,31 @@ const { v4: uuidv4 } = require('uuid');
 
 const ticketModel = {
 
-  async listar(empresa_id) {
-    const [rows] = await pool.query(
-      `SELECT t.id, t.codigo, t.titulo, t.categoria, t.prioridad, t.estado,
-              t.creado_en, t.sla_limite, t.sla_cumplido,
-              u1.nombre AS creado_por_nombre,
-              u2.nombre AS asignado_a_nombre
-       FROM tickets t
-       LEFT JOIN usuarios u1 ON t.creado_por = u1.id
-       LEFT JOIN usuarios u2 ON t.asignado_a = u2.id
-       WHERE t.empresa_id = ?
-       ORDER BY t.creado_en DESC`,
-      [empresa_id]
-    );
+  async listar(empresa_id, usuario) {
+    let query = `
+      SELECT t.id, t.codigo, t.titulo, t.categoria, t.prioridad, t.estado,
+             t.creado_en, t.sla_limite, t.sla_cumplido,
+             u1.nombre AS creado_por_nombre,
+             u2.nombre AS asignado_a_nombre
+      FROM tickets t
+      LEFT JOIN usuarios u1 ON t.creado_por = u1.id
+      LEFT JOIN usuarios u2 ON t.asignado_a = u2.id
+      WHERE t.empresa_id = ?
+    `;
+    const params = [empresa_id];
+
+    if (usuario.rol === 'usuario') {
+      query += ' AND t.creado_por = ?';
+      params.push(usuario.id);
+    } else if (usuario.rol === 'tecnico') {
+      query += ' AND t.asignado_a = ?';
+      params.push(usuario.id);
+    }
+    // admin ve todos, no se agrega filtro
+
+    query += ' ORDER BY t.creado_en DESC';
+
+    const [rows] = await pool.query(query, params);
     return rows;
   },
 
