@@ -148,6 +148,19 @@ function TicketDetalle() {
               <p><span className="text-gray-400">Creado por:</span> {ticket.creado_por_nombre}</p>
               <p><span className="text-gray-400">Asignado a:</span> {ticket.asignado_a_nombre || 'Sin asignar'}</p>
               <p><span className="text-gray-400">Creado:</span> {new Date(ticket.creado_en).toLocaleString('es-PE')}</p>
+              {ticket.sla_limite && (
+                <p>
+                  <span className="text-gray-400">Límite SLA:</span> {new Date(ticket.sla_limite).toLocaleString('es-PE')}
+                </p>
+              )}
+              {ticket.sla_cumplido !== null && (
+                <p>
+                  <span className="text-gray-400">SLA:</span>{' '}
+                  <span className={ticket.sla_cumplido ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                    {ticket.sla_cumplido ? '✓ Cumplido' : '✗ Incumplido'}
+                  </span>
+                </p>
+              )}
             </div>
 
             <div className="mb-2">
