@@ -10,6 +10,20 @@ const PrivateRoute = ({ children, rolesPermitidos }) => {
 
   if (!token) return <Navigate to="/login" />;
 
+  // Verificar si el token expiró
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      return <Navigate to="/login" />;
+    }
+  } catch {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    return <Navigate to="/login" />;
+  }
+
   if (rolesPermitidos && !rolesPermitidos.includes(usuario?.rol)) {
     return <Navigate to="/dashboard" />;
   }
