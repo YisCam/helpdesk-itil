@@ -55,14 +55,32 @@ const ticketController = {
 
   async actualizarEstado(req, res) {
     try {
-      const { estado } = req.body;
+      const { estado, comentario } = req.body;
       const estados = ['Abierto', 'En Progreso', 'Resuelto', 'Cerrado'];
 
       if (!estados.includes(estado)) {
         return res.status(400).json({ error: 'Estado inválido' });
       }
 
+      const ticketActual = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id);
+      if (!ticketActual) return res.status(404).json({ error: 'Ticket no encontrado' });
+
       await ticketModel.actualizarEstado(req.params.id, req.usuario.empresa_id, estado);
+
+      const historialModel = require('../models/historialModel');
+      await historialModel.registrar(
+        req.params.id,
+        req.usuario.empresa_id,
+        req.usuario.id,
+        `Estado cambiado de "${ticketActual.estado}" a "${estado}"`,
+        comentario || null
+      );
+
+      if (comentario) {
+        const comentarioModel = require('../models/comentarioModel');
+        await comentarioModel.crear(req.params.id, req.usuario.empresa_id, req.usuario.id, comentario);
+      }
+
       res.json({ mensaje: 'Estado actualizado correctamente' });
     } catch (error) {
       console.error('Error al actualizar estado:', error);
