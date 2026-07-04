@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const comentarioRoutes = require('./routes/comentarioRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/tickets/:ticketId/comentarios', comentarioRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+
 
 // ── Ruta de salud ─────────────────────────────
 app.get('/api/health', (req, res) => {
