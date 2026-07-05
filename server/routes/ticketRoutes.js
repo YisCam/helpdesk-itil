@@ -16,6 +16,6 @@ router.put('/:id',         permisos('admin', 'tecnico'), ticketController.actual
 router.patch('/:id/estado',   permisos('admin', 'tecnico'), ticketController.actualizarEstado);
 router.patch('/:id/asignar',  permisos('admin'),            ticketController.asignar);
 router.patch('/:id/resolver', permisos('admin', 'tecnico'), ticketController.resolver);
-
+router.get('/:id/sla-detalle', ticketController.getSLADetalle);
 
 module.exports = router;

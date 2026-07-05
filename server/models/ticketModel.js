@@ -104,7 +104,16 @@ const ticketModel = {
        WHERE id = ? AND empresa_id = ?`,
       [titulo, descripcion, categoria, prioridad, etiquetas, id, empresa_id]
     );
+  },
+
+  async getSLADetalle(id, empresa_id) {
+    const [rows] = await pool.query(
+      'SELECT primera_respuesta_en FROM tickets WHERE id = ? AND empresa_id = ?',
+      [id, empresa_id]
+    );
+    return rows[0];
   }
+  
 
 };
 

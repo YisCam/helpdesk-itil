@@ -5,6 +5,8 @@ import Header from '../components/Header';
 import api from '../api/axios';
 import ComentariosList, { ComentariosInput } from '../components/ComentariosList';
 import HistorialList from '../components/HistorialList';
+import Dropdown from '../components/Dropdown';
+import DropdownBusqueda from '../components/DropdownBusqueda';
 
 const CATEGORIAS = ['Hardware', 'Software', 'Red', 'Accesos', 'Otro'];
 const PRIORIDADES = ['Critica', 'Alta', 'Media', 'Baja'];
@@ -17,14 +19,12 @@ const colorEstado = {
   Cerrado: 'bg-gray-100 text-gray-600',
 };
 
-const colorPrioridad = {
-  Critica: 'text-red-600',
-  Alta: 'text-amber-600',
-  Media: 'text-blue-600',
-  Baja: 'text-gray-400',
+const colorPrioridadMap = {
+  Critica: 'bg-red-50 text-red-700',
+  Alta: 'bg-amber-50 text-amber-700',
+  Media: 'bg-blue-50 text-blue-700',
+  Baja: 'bg-gray-100 text-gray-600',
 };
-
-const iconPrioridad = { Critica: '↑↑', Alta: '↑', Media: '→', Baja: '↓' };
 
 function DetalleCampo({ label, children }) {
   return (
@@ -45,6 +45,7 @@ function TicketDetalle() {
   const [ticket, setTicket] = useState(null);
   const [historial, setHistorial] = useState([]);
   const [tecnicos, setTecnicos] = useState([]);
+  const [slaDetalle, setSlaDetalle] = useState(null);
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [tituloEditado, setTituloEditado] = useState(false);
@@ -83,10 +84,18 @@ function TicketDetalle() {
     } catch (err) { console.error(err); }
   };
 
+  const cargarSLADetalle = async () => {
+    try {
+      const res = await api.get(`/tickets/${id}/sla-detalle`);
+      setSlaDetalle(res.data);
+    } catch (err) { console.error(err); }
+  };
+
   useEffect(() => {
     cargarTicket();
     cargarHistorial();
     cargarTecnicos();
+    cargarSLADetalle();
   }, [id]);
 
   useEffect(() => {
@@ -116,7 +125,7 @@ function TicketDetalle() {
   const handleAsignar = async (asignado_a) => {
     try {
       await api.patch(`/tickets/${id}/asignar`, { asignado_a });
-      cargarTicket(); cargarHistorial();
+      cargarTicket(); cargarHistorial(); cargarSLADetalle();
     } catch (err) { setError('Error al asignar'); }
   };
 
@@ -124,7 +133,7 @@ function TicketDetalle() {
     try {
       await api.patch(`/tickets/${id}/estado`, { estado: modalEstado, comentario: comentarioEstado });
       setModalEstado(null); setComentarioEstado('');
-      cargarTicket(); cargarHistorial();
+      cargarTicket(); cargarHistorial(); cargarSLADetalle();
       setRefreshComentarios(r => r + 1);
     } catch (err) { setError('Error al cambiar estado'); }
   };
@@ -139,20 +148,16 @@ function TicketDetalle() {
   return (
     <div className="flex h-screen font-sans bg-white overflow-hidden">
 
-      {/* Sidebar fijo */}
       <div className="flex-shrink-0">
         <Sidebar />
       </div>
 
-      {/* Todo el contenido a la derecha del sidebar */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Header ocupa todo el ancho */}
         <div className="flex-shrink-0">
           <Header titulo="" />
         </div>
 
-        {/* Contenido debajo del header */}
         <div className="flex flex-1 overflow-hidden">
 
           {/* Columna central */}
@@ -221,7 +226,7 @@ function TicketDetalle() {
               <div className="flex-shrink-0 bg-white">
                 <ComentariosInput
                   ticketId={id}
-                  onNuevoComentario={() => { setRefreshComentarios(r => r + 1); cargarTicket(); }}
+                  onNuevoComentario={() => { setRefreshComentarios(r => r + 1); cargarTicket(); cargarSLADetalle(); }}
                 />
               </div>
             )}
@@ -238,7 +243,7 @@ function TicketDetalle() {
           {/* Panel derecho fijo */}
           <div className="w-[420px] border-l border-gray-200 bg-white flex-shrink-0 flex flex-col overflow-hidden">
 
-            {/* Card de estado — separado, arriba */}
+            {/* Card estado */}
             <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0" ref={dropdownRef}>
               {puedeEditar ? (
                 <div className="relative">
@@ -271,39 +276,79 @@ function TicketDetalle() {
               )}
             </div>
 
-            {/* Card de detalles con scroll */}
+            {/* Card SLA */}
+            <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">SLAs</p>
+              <div className="flex flex-col gap-4">
+
+                {/* Primera respuesta */}
+                <div className="flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${slaDetalle?.primera_respuesta_en ? 'bg-green-500' : 'bg-amber-400'}`} />
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Primera respuesta</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {slaDetalle?.primera_respuesta_en ? (
+                        `✓ ${Math.round((new Date(slaDetalle.primera_respuesta_en) - new Date(ticket.creado_en)) / 60000)} min después de creado`
+                      ) : (
+                        ticket.sla_limite
+                          ? `Vence ${new Date(ticket.sla_limite).toLocaleString('es-PE')}`
+                          : 'Sin respuesta aún'
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tiempo de resolución */}
+                <div className="flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0
+                    ${ticket.sla_cumplido === 1 ? 'bg-green-500' :
+                      ticket.sla_cumplido === 0 ? 'bg-red-500' : 'bg-amber-400'}`}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Tiempo de resolución</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {ticket.sla_cumplido === 1 ? '✓ Resuelto dentro del plazo' :
+                       ticket.sla_cumplido === 0 ? '✗ Fuera del plazo' :
+                       ticket.sla_limite
+                       ? `Vence ${new Date(ticket.sla_limite).toLocaleString('es-PE')}`
+                       : 'Sin límite definido'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalles */}
             <div className="flex-1 overflow-y-auto px-6 py-4">
               <p className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Detalles</p>
 
               <DetalleCampo label="Prioridad">
-                {puedeEditar ? (
-                  <select value={ticket.prioridad} onChange={e => handleCambiarCampo('prioridad', e.target.value)} className={`text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full font-semibold outline-none cursor-pointer ${colorPrioridad[ticket.prioridad]}`}>
-                    {PRIORIDADES.map(p => <option key={p} value={p}>{iconPrioridad[p]} {p}</option>)}
-                  </select>
-                ) : (
-                  <span className={`text-sm font-semibold ${colorPrioridad[ticket.prioridad]}`}>{iconPrioridad[ticket.prioridad]} {ticket.prioridad}</span>
-                )}
+                <Dropdown
+                  valor={ticket.prioridad}
+                  opciones={PRIORIDADES}
+                  onChange={v => handleCambiarCampo('prioridad', v)}
+                  colorMap={colorPrioridadMap}
+                  disabled={!puedeEditar}
+                />
               </DetalleCampo>
 
               <DetalleCampo label="Categoría">
-                {puedeEditar ? (
-                  <select value={ticket.categoria} onChange={e => handleCambiarCampo('categoria', e.target.value)} className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full outline-none cursor-pointer text-gray-700">
-                    {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                ) : (
-                  <span className="text-sm text-gray-700">{ticket.categoria}</span>
-                )}
+                <Dropdown
+                  valor={ticket.categoria}
+                  opciones={CATEGORIAS}
+                  onChange={v => handleCambiarCampo('categoria', v)}
+                  disabled={!puedeEditar}
+                />
               </DetalleCampo>
 
               <DetalleCampo label="Asignado a">
-                {puedeAsignar ? (
-                  <select value={ticket.asignado_a || ''} onChange={e => handleAsignar(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 w-full outline-none cursor-pointer text-gray-700">
-                    <option value="">Sin asignar</option>
-                    {tecnicos.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
-                  </select>
-                ) : (
-                  <span className="text-sm text-gray-700">{ticket.asignado_a_nombre || 'Sin asignar'}</span>
-                )}
+                <DropdownBusqueda
+                  valor={ticket.asignado_a || ''}
+                  opciones={tecnicos.map(t => ({ value: t.id, label: t.nombre }))}
+                  onChange={v => handleAsignar(v)}
+                  placeholder="Sin asignar"
+                  disabled={!puedeAsignar}
+                />
               </DetalleCampo>
 
               <DetalleCampo label="Creado por">
@@ -315,27 +360,11 @@ function TicketDetalle() {
                 </div>
               </DetalleCampo>
 
-              <DetalleCampo label="Fecha creación">
-                <span className="text-sm text-gray-700">{new Date(ticket.creado_en).toLocaleDateString('es-PE')}</span>
-              </DetalleCampo>
-
-              {ticket.sla_limite && (
-                <DetalleCampo label="Límite SLA">
-                  <span className="text-sm text-gray-700">{new Date(ticket.sla_limite).toLocaleString('es-PE')}</span>
-                </DetalleCampo>
-              )}
-
-              {ticket.sla_cumplido !== null && (
-                <DetalleCampo label="SLA">
-                  <span className={`text-sm font-semibold ${ticket.sla_cumplido ? 'text-green-600' : 'text-red-600'}`}>
-                    {ticket.sla_cumplido ? '✓ Cumplido' : '✗ Incumplido'}
-                  </span>
-                </DetalleCampo>
-              )}
-
               <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-1">
                 <p className="text-xs text-gray-400">Creado {new Date(ticket.creado_en).toLocaleDateString('es-PE')}</p>
-                {ticket.actualizado_en && <p className="text-xs text-gray-400">Actualizado {new Date(ticket.actualizado_en).toLocaleDateString('es-PE')}</p>}
+                {ticket.actualizado_en && (
+                  <p className="text-xs text-gray-400">Actualizado {new Date(ticket.actualizado_en).toLocaleDateString('es-PE')}</p>
+                )}
               </div>
             </div>
           </div>

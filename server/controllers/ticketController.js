@@ -144,6 +144,16 @@ const ticketController = {
       console.error('Error al actualizar ticket:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
+  },
+
+  async getSLADetalle(req, res) {
+    try {
+      const detalle = await ticketModel.getSLADetalle(req.params.id, req.usuario.empresa_id);
+      res.json({ primera_respuesta_en: detalle?.primera_respuesta_en || null });
+    } catch (error) {
+      console.error('Error al obtener SLA detalle:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
 
 };

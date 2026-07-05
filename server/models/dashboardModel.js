@@ -77,6 +77,36 @@ const dashboardModel = {
       [empresa_id]
     );
     return rows;
+  },
+
+
+  async getSLADetalle(empresa_id, ticket_id) {
+    const [primeraRespuesta] = await pool.query(
+      `SELECT MIN(c.creado_en) AS primera_respuesta_en
+      FROM ticket_comentarios c
+      JOIN usuarios u ON c.usuario_id = u.id
+      WHERE c.ticket_id = ? AND c.empresa_id = ?
+      AND u.rol IN ('admin', 'tecnico')`,
+      [ticket_id, empresa_id]
+    );
+    return primeraRespuesta[0];
+  },
+
+  async getTiempoPromedioRespuesta(empresa_id) {
+    const [rows] = await pool.query(
+      `SELECT ROUND(AVG(TIMESTAMPDIFF(MINUTE, t.creado_en, primera.primera_en)), 0) AS minutos_promedio
+      FROM tickets t
+      JOIN (
+        SELECT c.ticket_id, MIN(c.creado_en) AS primera_en
+        FROM ticket_comentarios c
+        JOIN usuarios u ON c.usuario_id = u.id
+        WHERE c.empresa_id = ? AND u.rol IN ('admin', 'tecnico')
+        GROUP BY c.ticket_id
+      ) primera ON t.id = primera.ticket_id
+      WHERE t.empresa_id = ?`,
+      [empresa_id, empresa_id]
+    );
+    return rows[0]?.minutos_promedio || null;
   }
 
 };

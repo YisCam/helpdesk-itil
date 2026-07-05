@@ -30,6 +30,16 @@ const dashboardController = {
       console.error('Error al obtener SLA por prioridad:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
+  },
+
+  async getTiempoPromedioRespuesta(req, res) {
+    try {
+      const minutos = await dashboardModel.getTiempoPromedioRespuesta(req.usuario.empresa_id);
+      res.json({ minutos_promedio: minutos });
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
 
 };
