@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
 import TicketDetalle from './pages/TicketDetalle';
+import Kanban from './pages/Kanban';
 
 const PrivateRoute = ({ children, rolesPermitidos }) => {
   const token = localStorage.getItem('token');
@@ -54,7 +55,7 @@ function App() {
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/tickets" element={<PrivateRoute><Tickets /></PrivateRoute>} />
         <Route path="/tickets/:id" element={<PrivateRoute><TicketDetalle /></PrivateRoute>} />
-        <Route path="/kanban" element={<PrivateRoute><Proximamente titulo="Vista Kanban" /></PrivateRoute>} />
+        <Route path="/kanban" element={<PrivateRoute><Kanban /></PrivateRoute>} />
         <Route path="/cambios" element={<PrivateRoute><Proximamente titulo="Gestión de Cambios" /></PrivateRoute>} />
         <Route path="/problemas" element={<PrivateRoute><Proximamente titulo="Gestión de Problemas" /></PrivateRoute>} />
         <Route path="/conocimiento" element={<PrivateRoute><Proximamente titulo="Base de Conocimiento" /></PrivateRoute>} />
@@ -67,6 +68,9 @@ function App() {
         <Route path="/configuracion" element={
           <PrivateRoute rolesPermitidos={['admin']}><Proximamente titulo="Configuración" /></PrivateRoute>
         } />
+
+        
+
         <Route path="*" element={<RutaNoEncontrada />} />
       </Routes>
     </BrowserRouter>
