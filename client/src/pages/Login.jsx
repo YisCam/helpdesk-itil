@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 
 function Login() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '', slug: '' });
+  const { slug } = useParams();
+  const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,10 +18,10 @@ function Login() {
     setError('');
     setLoading(true);
     try {
-      const res = await api.post('/auth/login', form);
+      const res = await api.post('/auth/login', { ...form, slug });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('usuario', JSON.stringify(res.data.usuario));
-      navigate('/dashboard');
+      navigate(`/${res.data.usuario.slug}/dashboard`);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');
     } finally {
@@ -30,7 +31,7 @@ function Login() {
 
   return (
     <div className="flex min-h-screen font-sans">
-      <div className="flex-1 bg-[#1E3A5F] flex flex-col justify-center px-12">
+      <div className="w-1/2 bg-[#1E3A5F] flex flex-col justify-center px-12">
         <div className="flex items-center gap-3 mb-10">
           <div className="w-9 h-9 bg-[#4A90D9] rounded-lg flex items-center justify-center text-white text-lg">🎧</div>
           <span className="text-white text-xl font-medium">HelpDesk</span>
@@ -48,9 +49,16 @@ function Login() {
         </div>
       </div>
 
-     <div className="w-1/2 bg-white flex flex-col justify-center px-16">
+      <div className="w-1/2 bg-white flex flex-col justify-center px-16">
         <h2 className="text-2xl font-medium text-[#1E3A5F] mb-1">Bienvenido</h2>
-        <p className="text-sm text-gray-400 mb-8">Ingresa tus credenciales para continuar</p>
+        {slug ? (
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-2 h-2 rounded-full bg-green-400" />
+            <p className="text-sm text-gray-400">{slug}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 mb-6">Ingresa tus credenciales para continuar</p>
+        )}
 
         {error && (
           <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg mb-4">
@@ -59,19 +67,6 @@ function Login() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Empresa (slug)</label>
-            <input
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#4A90D9] focus:ring-2 focus:ring-[#4A90D9]/20"
-              type="text"
-              name="slug"
-              placeholder="empresa-demo"
-              value={form.slug}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Correo electrónico</label>
             <input

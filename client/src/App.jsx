@@ -11,7 +11,6 @@ const PrivateRoute = ({ children, rolesPermitidos }) => {
 
   if (!token) return <Navigate to="/login" />;
 
-  // Verificar si el token expiró
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     if (payload.exp * 1000 < Date.now()) {
@@ -26,7 +25,8 @@ const PrivateRoute = ({ children, rolesPermitidos }) => {
   }
 
   if (rolesPermitidos && !rolesPermitidos.includes(usuario?.rol)) {
-    return <Navigate to="/dashboard" />;
+    const slug = usuario?.slug || 'empresa-demo';
+    return <Navigate to={`/${slug}/dashboard`} />;
   }
 
   return children;
@@ -44,7 +44,11 @@ const Proximamente = ({ titulo }) => (
 
 const RutaNoEncontrada = () => {
   const token = localStorage.getItem('token');
-  return token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />;
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  if (token && usuario) {
+    return <Navigate to={`/${usuario.slug || 'empresa-demo'}/dashboard`} />;
+  }
+  return <Navigate to="/login" />;
 };
 
 function App() {
@@ -52,24 +56,24 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/tickets" element={<PrivateRoute><Tickets /></PrivateRoute>} />
-        <Route path="/tickets/:id" element={<PrivateRoute><TicketDetalle /></PrivateRoute>} />
-        <Route path="/kanban" element={<PrivateRoute><Kanban /></PrivateRoute>} />
-        <Route path="/cambios" element={<PrivateRoute><Proximamente titulo="Gestión de Cambios" /></PrivateRoute>} />
-        <Route path="/problemas" element={<PrivateRoute><Proximamente titulo="Gestión de Problemas" /></PrivateRoute>} />
-        <Route path="/conocimiento" element={<PrivateRoute><Proximamente titulo="Base de Conocimiento" /></PrivateRoute>} />
-        <Route path="/usuarios" element={
-          <PrivateRoute rolesPermitidos={['admin']}><Proximamente titulo="Gestión de Usuarios" /></PrivateRoute>
-        } />
-        <Route path="/reportes" element={
-          <PrivateRoute rolesPermitidos={['admin', 'tecnico']}><Proximamente titulo="Reportes" /></PrivateRoute>
-        } />
-        <Route path="/configuracion" element={
-          <PrivateRoute rolesPermitidos={['admin']}><Proximamente titulo="Configuración" /></PrivateRoute>
-        } />
+        <Route path="/:slug/login" element={<Login />} />
 
-        
+        <Route path="/:slug/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/:slug/tickets" element={<PrivateRoute><Tickets /></PrivateRoute>} />
+        <Route path="/:slug/tickets/:id" element={<PrivateRoute><TicketDetalle /></PrivateRoute>} />
+        <Route path="/:slug/kanban" element={<PrivateRoute><Kanban /></PrivateRoute>} />
+        <Route path="/:slug/cambios" element={<PrivateRoute><Proximamente titulo="Gestión de Cambios" /></PrivateRoute>} />
+        <Route path="/:slug/problemas" element={<PrivateRoute><Proximamente titulo="Gestión de Problemas" /></PrivateRoute>} />
+        <Route path="/:slug/conocimiento" element={<PrivateRoute><Proximamente titulo="Base de Conocimiento" /></PrivateRoute>} />
+        <Route path="/:slug/usuarios" element={
+          <PrivateRoute rolesPermitidos={['admin', 'superadmin']}><Proximamente titulo="Gestión de Usuarios" /></PrivateRoute>
+        } />
+        <Route path="/:slug/reportes" element={
+          <PrivateRoute rolesPermitidos={['admin', 'tecnico', 'superadmin']}><Proximamente titulo="Reportes" /></PrivateRoute>
+        } />
+        <Route path="/:slug/configuracion" element={
+          <PrivateRoute rolesPermitidos={['admin', 'superadmin']}><Proximamente titulo="Configuración" /></PrivateRoute>
+        } />
 
         <Route path="*" element={<RutaNoEncontrada />} />
       </Routes>

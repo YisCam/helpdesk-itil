@@ -8,41 +8,61 @@ const ticketModel = {
   async listar(empresa_id, usuario) {
     let query = `
       SELECT t.id, t.codigo, t.titulo, t.categoria, t.prioridad, t.estado,
-             t.creado_en, t.sla_limite, t.sla_cumplido,
-             u1.nombre AS creado_por_nombre,
-             u2.nombre AS asignado_a_nombre
+            t.creado_en, t.sla_limite, t.sla_cumplido,
+            u1.nombre AS creado_por_nombre,
+            u2.nombre AS asignado_a_nombre,
+            e.nombre AS empresa_nombre
       FROM tickets t
       LEFT JOIN usuarios u1 ON t.creado_por = u1.id
       LEFT JOIN usuarios u2 ON t.asignado_a = u2.id
-      WHERE t.empresa_id = ?
+      LEFT JOIN empresas e ON t.empresa_id = e.id
+      WHERE 1=1
     `;
-    const params = [empresa_id];
+    const params = [];
+    const esProveedora = empresa_id === 'emp-001';
 
     if (usuario.rol === 'usuario') {
-      query += ' AND t.creado_por = ?';
-      params.push(usuario.id);
+      // Cliente: solo sus tickets
+      query += ' AND t.empresa_id = ? AND t.creado_por = ?';
+      params.push(empresa_id, usuario.id);
     } else if (usuario.rol === 'tecnico') {
+      // Técnico Aurogal: solo los asignados a él
       query += ' AND t.asignado_a = ?';
       params.push(usuario.id);
+    } else if (usuario.rol === 'admin' && esProveedora) {
+      // Admin Aurogal: todos los tickets de todos los clientes
+    } else if (usuario.rol === 'admin' && !esProveedora) {
+      // Admin cliente: todos los tickets de su empresa (ya no existe pero por si acaso)
+      query += ' AND t.empresa_id = ?';
+      params.push(empresa_id);
     }
+    // superadmin: ve todo sin filtro
 
     query += ' ORDER BY t.creado_en DESC';
-
     const [rows] = await pool.query(query, params);
     return rows;
   },
 
-  async buscarPorId(id, empresa_id) {
-    const [rows] = await pool.query(
-      `SELECT t.*, 
-              u1.nombre AS creado_por_nombre,
-              u2.nombre AS asignado_a_nombre
-       FROM tickets t
-       LEFT JOIN usuarios u1 ON t.creado_por = u1.id
-       LEFT JOIN usuarios u2 ON t.asignado_a = u2.id
-       WHERE t.id = ? AND t.empresa_id = ?`,
-      [id, empresa_id]
-    );
+  async buscarPorId(id, empresa_id, esProveedora = false) {
+    let query = `
+      SELECT t.*, 
+            u1.nombre AS creado_por_nombre,
+            u2.nombre AS asignado_a_nombre,
+            e.nombre AS empresa_nombre
+      FROM tickets t
+      LEFT JOIN usuarios u1 ON t.creado_por = u1.id
+      LEFT JOIN usuarios u2 ON t.asignado_a = u2.id
+      LEFT JOIN empresas e ON t.empresa_id = e.id
+      WHERE t.id = ?
+    `;
+    const params = [id];
+
+    if (!esProveedora) {
+      query += ' AND t.empresa_id = ?';
+      params.push(empresa_id);
+    }
+
+    const [rows] = await pool.query(query, params);
     return rows[0];
   },
 

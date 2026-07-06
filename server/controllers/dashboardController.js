@@ -1,7 +1,6 @@
 const dashboardModel = require('../models/dashboardModel');
 
 const dashboardController = {
-
   async getMetricas(req, res) {
     try {
       const metricas = await dashboardModel.getMetricas(req.usuario.empresa_id, req.usuario);
@@ -24,7 +23,7 @@ const dashboardController = {
 
   async getSLAPorPrioridad(req, res) {
     try {
-      const sla = await dashboardModel.getSLAPorPrioridad(req.usuario.empresa_id);
+      const sla = await dashboardModel.getSLAPorPrioridad(req.usuario.empresa_id, req.usuario);
       res.json(sla);
     } catch (error) {
       console.error('Error al obtener SLA por prioridad:', error);
@@ -34,14 +33,13 @@ const dashboardController = {
 
   async getTiempoPromedioRespuesta(req, res) {
     try {
-      const minutos = await dashboardModel.getTiempoPromedioRespuesta(req.usuario.empresa_id);
+      const minutos = await dashboardModel.getTiempoPromedioRespuesta(req.usuario.empresa_id, req.usuario);
       res.json({ minutos_promedio: minutos });
     } catch (error) {
       console.error('Error:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
-
 };
 
 module.exports = dashboardController;

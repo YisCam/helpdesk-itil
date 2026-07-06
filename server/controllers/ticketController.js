@@ -14,7 +14,8 @@ const ticketController = {
 
   async obtener(req, res) {
     try {
-      const ticket = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id);
+      const esProveedora = req.usuario.empresa_id === 'emp-001';
+      const ticket = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id, esProveedora);
       if (!ticket) return res.status(404).json({ error: 'Ticket no encontrado' });
       res.json(ticket);
     } catch (error) {

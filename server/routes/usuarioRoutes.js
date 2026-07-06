@@ -6,9 +6,9 @@ const permisos = require('../middlewares/permisosMiddleware');
 
 router.use(authMiddleware);
 
-router.get('/', permisos('admin', 'tecnico'), usuarioController.listar);
-router.post('/', permisos('admin'), usuarioController.crear);
-router.put('/:id', permisos('admin'), usuarioController.actualizar);
-router.delete('/:id', permisos('admin'), usuarioController.desactivar);
+router.get('/',    permisos('admin', 'tecnico', 'superadmin'), usuarioController.listar);
+router.post('/',   permisos('admin', 'superadmin'),            usuarioController.crear);
+router.put('/:id', permisos('admin', 'superadmin'),            usuarioController.actualizar);
+router.delete('/:id', permisos('admin', 'superadmin'),         usuarioController.desactivar);
 
 module.exports = router;

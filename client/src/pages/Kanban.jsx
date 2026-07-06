@@ -13,17 +13,17 @@ import api from '../api/axios';
 const COLUMNAS = ['Abierto', 'En Progreso', 'Resuelto', 'Cerrado'];
 
 const colorColumna = {
-  Abierto:      'border-red-300 bg-red-50',
+  Abierto:       'border-red-300 bg-red-50',
   'En Progreso': 'border-amber-300 bg-amber-50',
-  Resuelto:     'border-green-300 bg-green-50',
-  Cerrado:      'border-gray-300 bg-gray-50',
+  Resuelto:      'border-green-300 bg-green-50',
+  Cerrado:       'border-gray-300 bg-gray-50',
 };
 
 const colorHeader = {
-  Abierto:      'text-red-700 bg-red-100',
+  Abierto:       'text-red-700 bg-red-100',
   'En Progreso': 'text-amber-700 bg-amber-100',
-  Resuelto:     'text-green-700 bg-green-100',
-  Cerrado:      'text-gray-600 bg-gray-100',
+  Resuelto:      'text-green-700 bg-green-100',
+  Cerrado:       'text-gray-600 bg-gray-100',
 };
 
 const colorPrioridad = {
@@ -36,6 +36,8 @@ const colorPrioridad = {
 function TicketCard({ ticket, overlay }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: ticket.id });
   const navigate = useNavigate();
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const slug = usuario?.slug || 'aurogal';
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -51,7 +53,7 @@ function TicketCard({ ticket, overlay }) {
       {...listeners}
       className={`bg-white border border-gray-200 rounded-xl p-3 shadow-sm cursor-grab active:cursor-grabbing
         ${overlay ? 'shadow-xl rotate-1 scale-105' : 'hover:shadow-md transition-shadow'}`}
-      onClick={() => !overlay && navigate(`/tickets/${ticket.id}`)}
+      onClick={() => !overlay && navigate(`/${slug}/tickets/${ticket.id}`)}
     >
       <p className="text-xs text-gray-400 mb-1">{ticket.codigo}</p>
       <p className="text-sm font-medium text-gray-800 mb-2 leading-snug">{ticket.titulo}</p>
@@ -101,6 +103,7 @@ function Kanban() {
   const [tickets, setTickets] = useState([]);
   const [activeTicket, setActiveTicket] = useState(null);
   const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const slug = usuario?.slug || 'aurogal';
   const puedeEditar = usuario?.rol === 'admin' || usuario?.rol === 'tecnico';
 
   const sensors = useSensors(
@@ -122,9 +125,7 @@ function Kanban() {
 
   const getTicketsPorEstado = (estado) => tickets.filter(t => t.estado === estado);
 
-  const findEstado = (ticketId) => {
-    return tickets.find(t => t.id === ticketId)?.estado;
-  };
+  const findEstado = (ticketId) => tickets.find(t => t.id === ticketId)?.estado;
 
   const handleDragStart = (event) => {
     const ticket = tickets.find(t => t.id === event.active.id);
@@ -140,7 +141,6 @@ function Kanban() {
     const ticketId = active.id;
     const estadoOrigen = findEstado(ticketId);
 
-    // Ver si se soltó sobre una columna o sobre otro ticket
     let estadoDestino = over.id;
     if (!COLUMNAS.includes(estadoDestino)) {
       estadoDestino = findEstado(estadoDestino);
@@ -148,7 +148,6 @@ function Kanban() {
 
     if (!estadoDestino || estadoOrigen === estadoDestino) return;
 
-    // Actualizar optimistamente
     setTickets(prev => prev.map(t =>
       t.id === ticketId ? { ...t, estado: estadoDestino } : t
     ));
@@ -157,7 +156,7 @@ function Kanban() {
       await api.patch(`/tickets/${ticketId}/estado`, { estado: estadoDestino });
     } catch (err) {
       console.error('Error al actualizar estado:', err);
-      cargarTickets(); // revertir si falla
+      cargarTickets();
     }
   };
 

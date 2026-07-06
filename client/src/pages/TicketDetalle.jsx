@@ -39,6 +39,7 @@ function TicketDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const slug = usuario?.slug || 'aurogal';
   const puedeEditar = usuario?.rol === 'admin' || usuario?.rol === 'tecnico';
   const puedeAsignar = usuario?.rol === 'admin';
 
@@ -166,7 +167,7 @@ function TicketDetalle() {
             {/* FIJO: breadcrumb + título + descripción */}
             <div className="px-10 pt-6 pb-4 border-b border-gray-100 bg-white flex-shrink-0">
               <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
-                <button onClick={() => navigate('/tickets')} className="hover:text-gray-600 bg-transparent border-none cursor-pointer p-0">
+                <button onClick={() => navigate(`/${slug}/tickets`)} className="hover:text-gray-600 bg-transparent border-none cursor-pointer p-0">
                   Tickets
                 </button>
                 <span>/</span>

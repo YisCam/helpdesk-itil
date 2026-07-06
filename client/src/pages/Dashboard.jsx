@@ -23,6 +23,7 @@ const PRIORIDADES_ORDEN = ['Critica', 'Alta', 'Media', 'Baja'];
 function Dashboard() {
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const slug = usuario?.slug || 'aurogal';
 
   const [metricas, setMetricas] = useState(null);
   const [ticketsRecientes, setTicketsRecientes] = useState([]);
@@ -77,13 +78,11 @@ function Dashboard() {
 
         <div className="p-6 flex flex-col gap-6">
 
-          {/* Saludo */}
           <div>
             <h2 className="text-lg font-medium text-[#1E3A5F]">Bienvenido, {usuario?.nombre} 👋</h2>
             <p className="text-sm text-gray-400">Aquí tienes un resumen de la actividad actual.</p>
           </div>
 
-          {/* Métricas */}
           <div className="grid grid-cols-4 gap-3">
             <div className="bg-white border border-gray-200 rounded-xl p-4">
               <p className="text-xs text-gray-400 mb-2">Tickets abiertos</p>
@@ -104,11 +103,10 @@ function Dashboard() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Tickets recientes */}
             <div className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-[#1E3A5F]">Tickets recientes</p>
-                <button onClick={() => navigate('/tickets')} className="text-xs text-[#4A90D9] hover:underline bg-transparent border-none cursor-pointer">
+                <button onClick={() => navigate(`/${slug}/tickets`)} className="text-xs text-[#4A90D9] hover:underline bg-transparent border-none cursor-pointer">
                   Ver todos →
                 </button>
               </div>
@@ -128,7 +126,7 @@ function Dashboard() {
                     {ticketsRecientes.map(t => (
                       <tr
                         key={t.id}
-                        onClick={() => navigate(`/tickets/${t.id}`)}
+                        onClick={() => navigate(`/${slug}/tickets/${t.id}`)}
                         className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors"
                       >
                         <td className="text-xs text-gray-400 py-3 px-2">{t.codigo}</td>
@@ -150,7 +148,6 @@ function Dashboard() {
               )}
             </div>
 
-            {/* SLA por prioridad */}
             <div className="bg-white border border-gray-200 rounded-xl p-5">
               <p className="text-sm font-medium text-[#1E3A5F] mb-4">SLA por prioridad</p>
               {slaPrioridad.length === 0 ? (

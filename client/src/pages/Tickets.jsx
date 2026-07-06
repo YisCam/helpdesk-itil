@@ -24,6 +24,8 @@ const badgeEstado = {
 
 function Tickets() {
   const navigate = useNavigate();
+  const usuario = JSON.parse(localStorage.getItem('usuario'));
+  const slug = usuario?.slug || 'aurogal';
   const [tickets, setTickets] = useState([]);
   const [filtros, setFiltros] = useState({ estado: '', prioridad: '', busqueda: '' });
   const [modal, setModal] = useState(false);
@@ -133,7 +135,7 @@ function Tickets() {
                   ticketsFiltrados.map(t => (
                     <tr
                       key={t.id}
-                      onClick={() => navigate(`/tickets/${t.id}`)}
+                      onClick={() => navigate(`/${slug}/tickets/${t.id}`)}
                       className="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                       <td className="text-xs text-gray-400 py-3 px-4">{t.codigo}</td>
