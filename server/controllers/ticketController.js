@@ -35,12 +35,8 @@ const ticketController = {
       const categorias = ['Hardware', 'Software', 'Red', 'Accesos', 'Otro'];
       const prioridades = ['Critica', 'Alta', 'Media', 'Baja'];
 
-      if (!categorias.includes(categoria)) {
-        return res.status(400).json({ error: 'Categoría inválida' });
-      }
-      if (!prioridades.includes(prioridad)) {
-        return res.status(400).json({ error: 'Prioridad inválida' });
-      }
+      if (!categorias.includes(categoria)) return res.status(400).json({ error: 'Categoría inválida' });
+      if (!prioridades.includes(prioridad)) return res.status(400).json({ error: 'Prioridad inválida' });
 
       const ticket = await ticketModel.crear(
         req.usuario.empresa_id,
@@ -59,11 +55,10 @@ const ticketController = {
       const { estado, comentario } = req.body;
       const estados = ['Abierto', 'En Progreso', 'Resuelto', 'Cerrado'];
 
-      if (!estados.includes(estado)) {
-        return res.status(400).json({ error: 'Estado inválido' });
-      }
+      if (!estados.includes(estado)) return res.status(400).json({ error: 'Estado inválido' });
 
-      const ticketActual = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id);
+      const esProveedora = req.usuario.empresa_id === 'emp-001';
+      const ticketActual = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id, esProveedora);
       if (!ticketActual) return res.status(404).json({ error: 'Ticket no encontrado' });
 
       await ticketModel.actualizarEstado(req.params.id, req.usuario.empresa_id, estado);
@@ -71,7 +66,7 @@ const ticketController = {
       const historialModel = require('../models/historialModel');
       await historialModel.registrar(
         req.params.id,
-        req.usuario.empresa_id,
+        ticketActual.empresa_id,
         req.usuario.id,
         `Estado cambiado de "${ticketActual.estado}" a "${estado}"`,
         comentario || null
@@ -79,7 +74,7 @@ const ticketController = {
 
       if (comentario) {
         const comentarioModel = require('../models/comentarioModel');
-        await comentarioModel.crear(req.params.id, req.usuario.empresa_id, req.usuario.id, comentario);
+        await comentarioModel.crear(req.params.id, ticketActual.empresa_id, req.usuario.id, comentario);
       }
 
       res.json({ mensaje: 'Estado actualizado correctamente' });
@@ -92,10 +87,7 @@ const ticketController = {
   async asignar(req, res) {
     try {
       const { asignado_a } = req.body;
-
-      if (!asignado_a) {
-        return res.status(400).json({ error: 'El campo asignado_a es obligatorio' });
-      }
+      if (!asignado_a) return res.status(400).json({ error: 'El campo asignado_a es obligatorio' });
 
       await ticketModel.asignar(req.params.id, req.usuario.empresa_id, asignado_a);
       res.json({ mensaje: 'Ticket asignado correctamente' });
@@ -108,10 +100,7 @@ const ticketController = {
   async resolver(req, res) {
     try {
       const { resolucion } = req.body;
-
-      if (!resolucion) {
-        return res.status(400).json({ error: 'La resolución es obligatoria' });
-      }
+      if (!resolucion) return res.status(400).json({ error: 'La resolución es obligatoria' });
 
       await ticketModel.resolver(req.params.id, req.usuario.empresa_id, resolucion);
       res.json({ mensaje: 'Ticket resuelto correctamente' });
@@ -132,12 +121,8 @@ const ticketController = {
       const categorias = ['Hardware', 'Software', 'Red', 'Accesos', 'Otro'];
       const prioridades = ['Critica', 'Alta', 'Media', 'Baja'];
 
-      if (!categorias.includes(categoria)) {
-        return res.status(400).json({ error: 'Categoría inválida' });
-      }
-      if (!prioridades.includes(prioridad)) {
-        return res.status(400).json({ error: 'Prioridad inválida' });
-      }
+      if (!categorias.includes(categoria)) return res.status(400).json({ error: 'Categoría inválida' });
+      if (!prioridades.includes(prioridad)) return res.status(400).json({ error: 'Prioridad inválida' });
 
       await ticketModel.actualizar(req.params.id, req.usuario.empresa_id, { titulo, descripcion, categoria, prioridad, etiquetas });
       res.json({ mensaje: 'Ticket actualizado correctamente' });
@@ -149,7 +134,8 @@ const ticketController = {
 
   async getSLADetalle(req, res) {
     try {
-      const detalle = await ticketModel.getSLADetalle(req.params.id, req.usuario.empresa_id);
+      const esProveedora = req.usuario.empresa_id === 'emp-001';
+      const detalle = await ticketModel.getSLADetalle(req.params.id, req.usuario.empresa_id, esProveedora);
       res.json({ primera_respuesta_en: detalle?.primera_respuesta_en || null });
     } catch (error) {
       console.error('Error al obtener SLA detalle:', error);

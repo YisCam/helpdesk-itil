@@ -2,7 +2,6 @@ const pool = require('../db');
 const { v4: uuidv4 } = require('uuid');
 const slaModel = require('./slaModel');
 
-
 const ticketModel = {
 
   async listar(empresa_id, usuario) {
@@ -22,17 +21,14 @@ const ticketModel = {
     const esProveedora = empresa_id === 'emp-001';
 
     if (usuario.rol === 'usuario') {
-      // Cliente: solo sus tickets
       query += ' AND t.empresa_id = ? AND t.creado_por = ?';
       params.push(empresa_id, usuario.id);
     } else if (usuario.rol === 'tecnico') {
-      // Técnico Aurogal: solo los asignados a él
       query += ' AND t.asignado_a = ?';
       params.push(usuario.id);
     } else if (usuario.rol === 'admin' && esProveedora) {
-      // Admin Aurogal: todos los tickets de todos los clientes
+      // Admin Aurogal: ve todo
     } else if (usuario.rol === 'admin' && !esProveedora) {
-      // Admin cliente: todos los tickets de su empresa (ya no existe pero por si acaso)
       query += ' AND t.empresa_id = ?';
       params.push(empresa_id);
     }
@@ -45,7 +41,7 @@ const ticketModel = {
 
   async buscarPorId(id, empresa_id, esProveedora = false) {
     let query = `
-      SELECT t.*, 
+      SELECT t.*,
             u1.nombre AS creado_por_nombre,
             u2.nombre AS asignado_a_nombre,
             e.nombre AS empresa_nombre
@@ -70,7 +66,6 @@ const ticketModel = {
     const id = uuidv4();
     const codigo = `TK-${Date.now().toString().slice(-6)}`;
 
-    // Calcular SLA según prioridad
     const sla = await slaModel.obtenerPorPrioridad(empresa_id, prioridad);
     let sla_limite = null;
     if (sla) {
@@ -87,22 +82,22 @@ const ticketModel = {
 
   async actualizarEstado(id, empresa_id, estado) {
     await pool.query(
-      'UPDATE tickets SET estado = ? WHERE id = ? AND empresa_id = ?',
-      [estado, id, empresa_id]
+      'UPDATE tickets SET estado = ? WHERE id = ?',
+      [estado, id]
     );
   },
 
   async asignar(id, empresa_id, asignado_a) {
     await pool.query(
-      'UPDATE tickets SET asignado_a = ?, estado = "En Progreso" WHERE id = ? AND empresa_id = ?',
-      [asignado_a, id, empresa_id]
+      'UPDATE tickets SET asignado_a = ?, estado = "En Progreso" WHERE id = ?',
+      [asignado_a, id]
     );
   },
 
   async resolver(id, empresa_id, resolucion) {
     const [tickets] = await pool.query(
-      'SELECT sla_limite FROM tickets WHERE id = ? AND empresa_id = ?',
-      [id, empresa_id]
+      'SELECT sla_limite FROM tickets WHERE id = ?',
+      [id]
     );
     const ticket = tickets[0];
 
@@ -112,8 +107,8 @@ const ticketModel = {
     }
 
     await pool.query(
-      'UPDATE tickets SET resolucion = ?, estado = "Resuelto", sla_cumplido = ? WHERE id = ? AND empresa_id = ?',
-      [resolucion, sla_cumplido, id, empresa_id]
+      'UPDATE tickets SET resolucion = ?, estado = "Resuelto", sla_cumplido = ? WHERE id = ?',
+      [resolucion, sla_cumplido, id]
     );
   },
 
@@ -121,19 +116,23 @@ const ticketModel = {
     await pool.query(
       `UPDATE tickets 
        SET titulo = ?, descripcion = ?, categoria = ?, prioridad = ?, etiquetas = ?
-       WHERE id = ? AND empresa_id = ?`,
-      [titulo, descripcion, categoria, prioridad, etiquetas, id, empresa_id]
+       WHERE id = ?`,
+      [titulo, descripcion, categoria, prioridad, etiquetas, id]
     );
   },
 
-  async getSLADetalle(id, empresa_id) {
-    const [rows] = await pool.query(
-      'SELECT primera_respuesta_en FROM tickets WHERE id = ? AND empresa_id = ?',
-      [id, empresa_id]
-    );
+  async getSLADetalle(id, empresa_id, esProveedora = false) {
+    let query = 'SELECT primera_respuesta_en FROM tickets WHERE id = ?';
+    const params = [id];
+
+    if (!esProveedora) {
+      query += ' AND empresa_id = ?';
+      params.push(empresa_id);
+    }
+
+    const [rows] = await pool.query(query, params);
     return rows[0];
   }
-  
 
 };
 

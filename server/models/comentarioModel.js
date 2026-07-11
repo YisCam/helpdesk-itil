@@ -24,17 +24,21 @@ const comentarioModel = {
       [id, empresa_id, ticket_id, usuario_id, contenido]
     );
 
-    // Registrar primera respuesta si es técnico o admin y aún no hay una
+    // Registrar primera respuesta si es técnico, admin o superadmin y aún no hay una
     const [usuarios] = await pool.query(
       'SELECT rol FROM usuarios WHERE id = ?',
       [usuario_id]
     );
 
-    if (usuarios[0]?.rol === 'tecnico' || usuarios[0]?.rol === 'admin') {
+    if (
+      usuarios[0]?.rol === 'tecnico' ||
+      usuarios[0]?.rol === 'admin' ||
+      usuarios[0]?.rol === 'superadmin'
+    ) {
       await pool.query(
         `UPDATE tickets SET primera_respuesta_en = NOW()
-        WHERE id = ? AND empresa_id = ? AND primera_respuesta_en IS NULL`,
-        [ticket_id, empresa_id]
+         WHERE id = ? AND primera_respuesta_en IS NULL`,
+        [ticket_id]
       );
     }
 
@@ -47,6 +51,7 @@ const comentarioModel = {
       [id, empresa_id, usuario_id]
     );
   },
+
   async editar(id, empresa_id, usuario_id, contenido) {
     await pool.query(
       'UPDATE ticket_comentarios SET contenido = ? WHERE id = ? AND empresa_id = ? AND usuario_id = ?',
