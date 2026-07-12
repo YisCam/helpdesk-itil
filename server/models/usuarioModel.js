@@ -20,11 +20,24 @@ const usuarioModel = {
     return rows[0];
   },
 
-  async listar(empresa_id) {
-    const [rows] = await pool.query(
-      'SELECT id, nombre, email, rol, activo, creado_en FROM usuarios WHERE empresa_id = ? ORDER BY creado_en DESC',
-      [empresa_id]
-    );
+  async listar(empresa_id, rol) {
+    const esProveedora = empresa_id === 'emp-001';
+    let query = `
+      SELECT u.id, u.nombre, u.email, u.rol, u.activo, u.creado_en,
+            e.nombre AS empresa_nombre
+      FROM usuarios u
+      LEFT JOIN empresas e ON u.empresa_id = e.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (!esProveedora || rol !== 'superadmin') {
+      query += ' AND u.empresa_id = ?';
+      params.push(empresa_id);
+    }
+
+    query += ' ORDER BY u.creado_en DESC';
+    const [rows] = await pool.query(query, params);
     return rows;
   },
 
@@ -50,6 +63,23 @@ const usuarioModel = {
     await pool.query(
       'UPDATE usuarios SET activo = 0 WHERE id = ? AND empresa_id = ?',
       [id, empresa_id]
+    );
+  },
+
+
+  async activar(id, empresa_id) {
+    await pool.query(
+      'UPDATE usuarios SET activo = 1 WHERE id = ? AND empresa_id = ?',
+      [id, empresa_id]
+    );
+  },
+
+  async resetPassword(id, empresa_id, password) {
+    const bcrypt = require('bcryptjs');
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query(
+      'UPDATE usuarios SET password_hash = ? WHERE id = ? AND empresa_id = ?',
+      [hash, id, empresa_id]
     );
   }
 

@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
 import TicketDetalle from './pages/TicketDetalle';
 import Kanban from './pages/Kanban';
+import Usuarios from './pages/Usuarios';
 
 const PrivateRoute = ({ children, rolesPermitidos }) => {
   const token = localStorage.getItem('token');
@@ -25,7 +26,7 @@ const PrivateRoute = ({ children, rolesPermitidos }) => {
   }
 
   if (rolesPermitidos && !rolesPermitidos.includes(usuario?.rol)) {
-    const slug = usuario?.slug || 'empresa-demo';
+    const slug = usuario?.slug || 'aurogal';
     return <Navigate to={`/${slug}/dashboard`} />;
   }
 
@@ -46,7 +47,7 @@ const RutaNoEncontrada = () => {
   const token = localStorage.getItem('token');
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   if (token && usuario) {
-    return <Navigate to={`/${usuario.slug || 'empresa-demo'}/dashboard`} />;
+    return <Navigate to={`/${usuario.slug || 'aurogal'}/dashboard`} />;
   }
   return <Navigate to="/login" />;
 };
@@ -66,13 +67,16 @@ function App() {
         <Route path="/:slug/problemas" element={<PrivateRoute><Proximamente titulo="Gestión de Problemas" /></PrivateRoute>} />
         <Route path="/:slug/conocimiento" element={<PrivateRoute><Proximamente titulo="Base de Conocimiento" /></PrivateRoute>} />
         <Route path="/:slug/usuarios" element={
-          <PrivateRoute rolesPermitidos={['admin', 'superadmin']}><Proximamente titulo="Gestión de Usuarios" /></PrivateRoute>
+          <PrivateRoute rolesPermitidos={['admin', 'superadmin']}><Usuarios /></PrivateRoute>
         } />
         <Route path="/:slug/reportes" element={
           <PrivateRoute rolesPermitidos={['admin', 'tecnico', 'superadmin']}><Proximamente titulo="Reportes" /></PrivateRoute>
         } />
         <Route path="/:slug/configuracion" element={
           <PrivateRoute rolesPermitidos={['admin', 'superadmin']}><Proximamente titulo="Configuración" /></PrivateRoute>
+        } />
+        <Route path="/:slug/empresas" element={
+          <PrivateRoute rolesPermitidos={['superadmin']}><Proximamente titulo="Gestión de Empresas" /></PrivateRoute>
         } />
 
         <Route path="*" element={<RutaNoEncontrada />} />
