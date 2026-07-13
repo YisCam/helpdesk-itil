@@ -7,6 +7,7 @@ import ComentariosList, { ComentariosInput } from '../components/ComentariosList
 import HistorialList from '../components/HistorialList';
 import Dropdown from '../components/Dropdown';
 import DropdownBusqueda from '../components/DropdownBusqueda';
+import CSATWidget from '../components/CSATWidget';
 
 const CATEGORIAS = ['Hardware', 'Software', 'Red', 'Accesos', 'Otro'];
 const PRIORIDADES = ['Critica', 'Alta', 'Media', 'Baja'];
@@ -40,8 +41,8 @@ function TicketDetalle() {
   const navigate = useNavigate();
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   const slug = usuario?.slug || 'aurogal';
-  const puedeEditar = usuario?.rol === 'admin' || usuario?.rol === 'tecnico';
-  const puedeAsignar = usuario?.rol === 'admin';
+  const puedeEditar = usuario?.rol === 'admin' || usuario?.rol === 'tecnico' || usuario?.rol === 'superadmin';
+  const puedeAsignar = usuario?.rol === 'admin' || usuario?.rol === 'superadmin';
 
   const [ticket, setTicket] = useState(null);
   const [historial, setHistorial] = useState([]);
@@ -236,7 +237,18 @@ function TicketDetalle() {
             <div className="flex-1 overflow-y-auto px-10 py-4">
               {tabActivo === 'historial' && <HistorialList historial={historial} />}
               {tabActivo === 'comentarios' && (
-                <ComentariosList key={refreshComentarios} ticketId={id} onNuevoComentario={() => setRefreshComentarios(r => r + 1)} />
+                <>
+                  <ComentariosList
+                    key={refreshComentarios}
+                    ticketId={id}
+                    onNuevoComentario={() => setRefreshComentarios(r => r + 1)}
+                  />
+                  <CSATWidget
+                    ticketId={id}
+                    estadoTicket={ticket?.estado}
+                    creadoPor={ticket?.creado_por}
+                  />
+                </>
               )}
             </div>
           </div>
@@ -246,7 +258,7 @@ function TicketDetalle() {
 
             {/* Card estado */}
             <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0" ref={dropdownRef}>
-              {puedeEditar ? (
+              {puedeEditar && ticket.estado !== 'Cerrado' ? (
                 <div className="relative">
                   <button
                     onClick={() => setDropdownEstado(!dropdownEstado)}
@@ -282,7 +294,6 @@ function TicketDetalle() {
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">SLAs</p>
               <div className="flex flex-col gap-4">
 
-                {/* Primera respuesta */}
                 <div className="flex items-start gap-3">
                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${slaDetalle?.primera_respuesta_en ? 'bg-green-500' : 'bg-amber-400'}`} />
                   <div>
@@ -299,7 +310,6 @@ function TicketDetalle() {
                   </div>
                 </div>
 
-                {/* Tiempo de resolución */}
                 <div className="flex items-start gap-3">
                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0
                     ${ticket.sla_cumplido === 1 ? 'bg-green-500' :

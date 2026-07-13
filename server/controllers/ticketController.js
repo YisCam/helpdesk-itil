@@ -61,6 +61,11 @@ const ticketController = {
       const ticketActual = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id, esProveedora);
       if (!ticketActual) return res.status(404).json({ error: 'Ticket no encontrado' });
 
+      // No se puede mover un ticket cerrado
+      if (ticketActual.estado === 'Cerrado') {
+        return res.status(400).json({ error: 'Un ticket cerrado no puede cambiar de estado' });
+      }
+
       await ticketModel.actualizarEstado(req.params.id, req.usuario.empresa_id, estado);
 
       const historialModel = require('../models/historialModel');

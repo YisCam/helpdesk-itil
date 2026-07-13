@@ -7,6 +7,8 @@ const usuarioRoutes = require('./routes/usuarioRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const comentarioRoutes = require('./routes/comentarioRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const csatRoutes = require('./routes/csatRoutes');
+const cerrarTicketsResueltos = require('./jobs/cerrarTicketsResueltos');
 
 const app = express();
 
@@ -20,12 +22,16 @@ app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/tickets/:ticketId/comentarios', comentarioRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-
+app.use('/api/tickets/:ticketId/csat', csatRoutes);
 
 // ── Ruta de salud ─────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, mensaje: 'Servidor HelpDesk funcionando' });
 });
+
+
+
+cerrarTicketsResueltos();
 
 // ── Arrancar servidor ─────────────────────────
 const PORT = process.env.PORT || 3000;
