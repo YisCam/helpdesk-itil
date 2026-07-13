@@ -104,7 +104,7 @@ function Kanban() {
   const [activeTicket, setActiveTicket] = useState(null);
   const usuario = JSON.parse(localStorage.getItem('usuario'));
   const slug = usuario?.slug || 'aurogal';
-  const puedeEditar = usuario?.rol === 'admin' || usuario?.rol === 'tecnico';
+  const puedeEditar = usuario?.rol === 'admin' || usuario?.rol === 'tecnico' || usuario?.rol === 'superadmin';
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
