@@ -6,6 +6,7 @@ import TicketDetalle from './pages/TicketDetalle';
 import Kanban from './pages/Kanban';
 import Usuarios from './pages/Usuarios';
 import Reportes from './pages/Reportes';
+import Empresas from './pages/Empresas';
 
 
 const PrivateRoute = ({ children, rolesPermitidos }) => {
@@ -76,7 +77,7 @@ function App() {
           <PrivateRoute rolesPermitidos={['admin', 'superadmin']}><Proximamente titulo="Configuración" /></PrivateRoute>
         } />
         <Route path="/:slug/empresas" element={
-          <PrivateRoute rolesPermitidos={['superadmin']}><Proximamente titulo="Gestión de Empresas" /></PrivateRoute>
+          <PrivateRoute rolesPermitidos={['superadmin']}><Empresas /></PrivateRoute>
         } />
         <Route path="/:slug/reportes" element={
           <PrivateRoute rolesPermitidos={['admin', 'tecnico', 'superadmin']}><Reportes /></PrivateRoute>

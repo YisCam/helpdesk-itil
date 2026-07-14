@@ -5,7 +5,6 @@ const comentarioController = {
 
   async listar(req, res) {
     try {
-      // Obtener empresa_id real del ticket
       const [ticket] = await pool.query('SELECT empresa_id FROM tickets WHERE id = ?', [req.params.ticketId]);
       if (!ticket[0]) return res.status(404).json({ error: 'Ticket no encontrado' });
 
@@ -24,16 +23,33 @@ const comentarioController = {
         return res.status(400).json({ error: 'El comentario no puede estar vacío' });
       }
 
-      // Obtener empresa_id real del ticket
-      const [ticket] = await pool.query('SELECT empresa_id FROM tickets WHERE id = ?', [req.params.ticketId]);
-      if (!ticket[0]) return res.status(404).json({ error: 'Ticket no encontrado' });
+      const [ticketRows] = await pool.query('SELECT * FROM tickets WHERE id = ?', [req.params.ticketId]);
+      if (!ticketRows[0]) return res.status(404).json({ error: 'Ticket no encontrado' });
+      const ticket = ticketRows[0];
 
       const comentario = await comentarioModel.crear(
         req.params.ticketId,
-        ticket[0].empresa_id,
+        ticket.empresa_id,
         req.usuario.id,
         contenido.trim()
       );
+
+      // Notificar al creador si el comentario es de técnico/admin/superadmin
+      if (
+        ['tecnico', 'admin', 'superadmin'].includes(req.usuario.rol) &&
+        ticket.creado_por !== req.usuario.id
+      ) {
+        const notificacionModel = require('../models/notificacionModel');
+        const { notificarUsuario } = require('../sse');
+        const notif = await notificacionModel.crear(
+          ticket.empresa_id,
+          ticket.creado_por,
+          'comentario',
+          `Nuevo comentario en tu ticket ${ticket.codigo}: ${ticket.titulo}`
+        );
+        notificarUsuario(ticket.creado_por, notif);
+      }
+
       res.status(201).json(comentario);
     } catch (error) {
       console.error('Error al crear comentario:', error);

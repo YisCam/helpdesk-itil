@@ -53,14 +53,18 @@ function Sidebar() {
         {esAurogal && (rol === 'admin' || rol === 'superadmin' || rol === 'tecnico') &&
           navItem(<Columns size={16} />, 'Kanban', '/kanban')}
 
-        {esAurogal && (
+        
+        
+        {/*esAurogal && (
+          
           <>
             <p className="text-[10px] text-[#6B8FAD] uppercase tracking-widest px-2 mt-4 mb-1">ITIL</p>
             {navItem(<RefreshCw size={16} />, 'Cambios', '/cambios')}
             {navItem(<Bug size={16} />, 'Problemas', '/problemas')}
             {navItem(<BookOpen size={16} />, 'Conocimiento', '/conocimiento')}
           </>
-        )}
+          
+        )*/}
 
         {esAurogal && (rol === 'admin' || rol === 'superadmin' || rol === 'tecnico') && (
           <>

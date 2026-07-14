@@ -81,10 +81,26 @@ const ticketModel = {
   },
 
   async actualizarEstado(id, empresa_id, estado) {
-    await pool.query(
-      'UPDATE tickets SET estado = ? WHERE id = ?',
-      [estado, id]
-    );
+    // Si pasa a Resuelto, calcular sla_cumplido
+    if (estado === 'Resuelto') {
+      const [tickets] = await pool.query(
+        'SELECT sla_limite FROM tickets WHERE id = ?', [id]
+      );
+      const ticket = tickets[0];
+      let sla_cumplido = null;
+      if (ticket?.sla_limite) {
+        sla_cumplido = new Date() <= new Date(ticket.sla_limite) ? 1 : 0;
+      }
+      await pool.query(
+        'UPDATE tickets SET estado = ?, sla_cumplido = ? WHERE id = ?',
+        [estado, sla_cumplido, id]
+      );
+    } else {
+      await pool.query(
+        'UPDATE tickets SET estado = ? WHERE id = ?',
+        [estado, id]
+      );
+    }
   },
 
   async asignar(id, empresa_id, asignado_a) {

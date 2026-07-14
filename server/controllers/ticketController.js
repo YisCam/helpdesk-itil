@@ -61,7 +61,6 @@ const ticketController = {
       const ticketActual = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id, esProveedora);
       if (!ticketActual) return res.status(404).json({ error: 'Ticket no encontrado' });
 
-      // No se puede mover un ticket cerrado
       if (ticketActual.estado === 'Cerrado') {
         return res.status(400).json({ error: 'Un ticket cerrado no puede cambiar de estado' });
       }
@@ -82,6 +81,29 @@ const ticketController = {
         await comentarioModel.crear(req.params.id, ticketActual.empresa_id, req.usuario.id, comentario);
       }
 
+      // Notificar al creador por cambio de estado
+      if (ticketActual.creado_por !== req.usuario.id) {
+        const notificacionModel = require('../models/notificacionModel');
+        const { notificarUsuario } = require('../sse');
+
+        const mensajes = {
+          'En Progreso': `Tu ticket ${ticketActual.codigo} está siendo atendido`,
+          'Resuelto':    `Tu ticket ${ticketActual.codigo} fue marcado como resuelto`,
+          'Cerrado':     `Tu ticket ${ticketActual.codigo} fue cerrado`,
+          'Abierto':     `Tu ticket ${ticketActual.codigo} fue reabierto`,
+        };
+
+        if (mensajes[estado]) {
+          const notif = await notificacionModel.crear(
+            ticketActual.empresa_id,
+            ticketActual.creado_por,
+            'resolucion',
+            mensajes[estado]
+          );
+          notificarUsuario(ticketActual.creado_por, notif);
+        }
+      }
+
       res.json({ mensaje: 'Estado actualizado correctamente' });
     } catch (error) {
       console.error('Error al actualizar estado:', error);
@@ -94,7 +116,36 @@ const ticketController = {
       const { asignado_a } = req.body;
       if (!asignado_a) return res.status(400).json({ error: 'El campo asignado_a es obligatorio' });
 
+      const esProveedora = req.usuario.empresa_id === 'emp-001';
+      const ticketActual = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id, esProveedora);
+      if (!ticketActual) return res.status(404).json({ error: 'Ticket no encontrado' });
+
+      const pool = require('../db');
+      const [tecnicos] = await pool.query('SELECT nombre FROM usuarios WHERE id = ?', [asignado_a]);
+      const nombreTecnico = tecnicos[0]?.nombre || 'Sin nombre';
+
       await ticketModel.asignar(req.params.id, req.usuario.empresa_id, asignado_a);
+
+      const historialModel = require('../models/historialModel');
+      await historialModel.registrar(
+        req.params.id,
+        ticketActual.empresa_id,
+        req.usuario.id,
+        `Ticket asignado a ${nombreTecnico}`,
+        null
+      );
+
+      // Notificar al técnico asignado
+      const notificacionModel = require('../models/notificacionModel');
+      const { notificarUsuario } = require('../sse');
+      const notif = await notificacionModel.crear(
+        ticketActual.empresa_id,
+        asignado_a,
+        'asignacion',
+        `Se te asignó el ticket ${ticketActual.codigo}: ${ticketActual.titulo}`
+      );
+      notificarUsuario(asignado_a, notif);
+
       res.json({ mensaje: 'Ticket asignado correctamente' });
     } catch (error) {
       console.error('Error al asignar ticket:', error);
@@ -146,41 +197,7 @@ const ticketController = {
       console.error('Error al obtener SLA detalle:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
-  },
-
-
-  async asignar(req, res) {
-    try {
-      const { asignado_a } = req.body;
-      if (!asignado_a) return res.status(400).json({ error: 'El campo asignado_a es obligatorio' });
-
-      const esProveedora = req.usuario.empresa_id === 'emp-001';
-      const ticketActual = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id, esProveedora);
-      if (!ticketActual) return res.status(404).json({ error: 'Ticket no encontrado' });
-
-      // Obtener nombre del técnico asignado
-      const pool = require('../db');
-      const [tecnicos] = await pool.query('SELECT nombre FROM usuarios WHERE id = ?', [asignado_a]);
-      const nombreTecnico = tecnicos[0]?.nombre || 'Sin nombre';
-
-      await ticketModel.asignar(req.params.id, req.usuario.empresa_id, asignado_a);
-
-      // Registrar en historial
-      const historialModel = require('../models/historialModel');
-      await historialModel.registrar(
-        req.params.id,
-        ticketActual.empresa_id,
-        req.usuario.id,
-        `Ticket asignado a ${nombreTecnico}`,
-        null
-      );
-
-      res.json({ mensaje: 'Ticket asignado correctamente' });
-    } catch (error) {
-      console.error('Error al asignar ticket:', error);
-      res.status(500).json({ error: 'Error interno del servidor' });
-    }
-  },
+  }
 
 };
 

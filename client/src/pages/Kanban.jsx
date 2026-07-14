@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors
+  DndContext, DragOverlay, rectIntersection, PointerSensor, useSensor, useSensors,
+  useDroppable
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -77,21 +78,27 @@ function TicketCard({ ticket, overlay }) {
 }
 
 function Columna({ estado, tickets }) {
+  const { setNodeRef, isOver } = useDroppable({ id: estado });
+
   return (
-    <div className={`flex flex-col rounded-xl border-2 ${colorColumna[estado]} min-h-[500px] w-72 flex-shrink-0`}>
+    <div className={`flex flex-col rounded-xl border-2 ${colorColumna[estado]} min-h-[500px] w-72 flex-shrink-0 transition-all
+      ${isOver ? 'ring-2 ring-[#4A90D9] ring-offset-1' : ''}`}>
       <div className={`flex items-center justify-between px-4 py-3 rounded-t-xl ${colorHeader[estado]}`}>
         <span className="text-sm font-semibold">{estado}</span>
         <span className="text-xs font-bold bg-white/50 px-2 py-0.5 rounded-full">{tickets.length}</span>
       </div>
-      <div className="flex flex-col gap-2 p-3 flex-1">
-        <SortableContext items={tickets.map(t => t.id)} strategy={verticalListSortingStrategy}>
+      <div ref={setNodeRef} className="flex flex-col gap-2 p-3 flex-1 min-h-[200px]">
+        <SortableContext
+          items={tickets.length > 0 ? tickets.map(t => t.id) : [`placeholder-${estado}`]}
+          strategy={verticalListSortingStrategy}
+        >
           {tickets.map(ticket => (
             <TicketCard key={ticket.id} ticket={ticket} />
           ))}
         </SortableContext>
         {tickets.length === 0 && (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-xs text-gray-400">Sin tickets</p>
+          <div className="flex-1 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl">
+            <p className="text-xs text-gray-400">Arrastra aquí</p>
           </div>
         )}
       </div>
@@ -124,7 +131,6 @@ function Kanban() {
   }, []);
 
   const getTicketsPorEstado = (estado) => tickets.filter(t => t.estado === estado);
-
   const findEstado = (ticketId) => tickets.find(t => t.id === ticketId)?.estado;
 
   const handleDragStart = (event) => {
@@ -141,10 +147,17 @@ function Kanban() {
     const ticketId = active.id;
     const estadoOrigen = findEstado(ticketId);
 
-    let estadoDestino = over.id;
-    if (!COLUMNAS.includes(estadoDestino)) {
-      estadoDestino = findEstado(estadoDestino);
+    let estadoDestino;
+    if (COLUMNAS.includes(over.id)) {
+      estadoDestino = over.id;
+    } else if (over.id.startsWith('placeholder-')) {
+      estadoDestino = over.id.replace('placeholder-', '');
+    } else {
+      const ticketDestino = tickets.find(t => t.id === over.id);
+      estadoDestino = ticketDestino?.estado;
     }
+
+    console.log('over.id:', over.id, 'origen:', estadoOrigen, '→ destino:', estadoDestino);
 
     if (!estadoDestino || estadoOrigen === estadoDestino) return;
 
@@ -155,7 +168,8 @@ function Kanban() {
     try {
       await api.patch(`/tickets/${ticketId}/estado`, { estado: estadoDestino });
     } catch (err) {
-      console.error('Error al actualizar estado:', err);
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
       cargarTickets();
     }
   };
@@ -168,7 +182,7 @@ function Kanban() {
         <div className="flex-1 overflow-x-auto p-6">
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
+            collisionDetection={rectIntersection}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
