@@ -146,7 +146,41 @@ const ticketController = {
       console.error('Error al obtener SLA detalle:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
-  }
+  },
+
+
+  async asignar(req, res) {
+    try {
+      const { asignado_a } = req.body;
+      if (!asignado_a) return res.status(400).json({ error: 'El campo asignado_a es obligatorio' });
+
+      const esProveedora = req.usuario.empresa_id === 'emp-001';
+      const ticketActual = await ticketModel.buscarPorId(req.params.id, req.usuario.empresa_id, esProveedora);
+      if (!ticketActual) return res.status(404).json({ error: 'Ticket no encontrado' });
+
+      // Obtener nombre del técnico asignado
+      const pool = require('../db');
+      const [tecnicos] = await pool.query('SELECT nombre FROM usuarios WHERE id = ?', [asignado_a]);
+      const nombreTecnico = tecnicos[0]?.nombre || 'Sin nombre';
+
+      await ticketModel.asignar(req.params.id, req.usuario.empresa_id, asignado_a);
+
+      // Registrar en historial
+      const historialModel = require('../models/historialModel');
+      await historialModel.registrar(
+        req.params.id,
+        ticketActual.empresa_id,
+        req.usuario.id,
+        `Ticket asignado a ${nombreTecnico}`,
+        null
+      );
+
+      res.json({ mensaje: 'Ticket asignado correctamente' });
+    } catch (error) {
+      console.error('Error al asignar ticket:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  },
 
 };
 
