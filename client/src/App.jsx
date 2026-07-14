@@ -5,6 +5,8 @@ import Tickets from './pages/Tickets';
 import TicketDetalle from './pages/TicketDetalle';
 import Kanban from './pages/Kanban';
 import Usuarios from './pages/Usuarios';
+import Reportes from './pages/Reportes';
+
 
 const PrivateRoute = ({ children, rolesPermitidos }) => {
   const token = localStorage.getItem('token');
@@ -69,14 +71,15 @@ function App() {
         <Route path="/:slug/usuarios" element={
           <PrivateRoute rolesPermitidos={['admin', 'superadmin']}><Usuarios /></PrivateRoute>
         } />
-        <Route path="/:slug/reportes" element={
-          <PrivateRoute rolesPermitidos={['admin', 'tecnico', 'superadmin']}><Proximamente titulo="Reportes" /></PrivateRoute>
-        } />
+    
         <Route path="/:slug/configuracion" element={
           <PrivateRoute rolesPermitidos={['admin', 'superadmin']}><Proximamente titulo="Configuración" /></PrivateRoute>
         } />
         <Route path="/:slug/empresas" element={
           <PrivateRoute rolesPermitidos={['superadmin']}><Proximamente titulo="Gestión de Empresas" /></PrivateRoute>
+        } />
+        <Route path="/:slug/reportes" element={
+          <PrivateRoute rolesPermitidos={['admin', 'tecnico', 'superadmin']}><Reportes /></PrivateRoute>
         } />
 
         <Route path="*" element={<RutaNoEncontrada />} />

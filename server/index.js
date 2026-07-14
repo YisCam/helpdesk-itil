@@ -9,6 +9,7 @@ const comentarioRoutes = require('./routes/comentarioRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const csatRoutes = require('./routes/csatRoutes');
 const cerrarTicketsResueltos = require('./jobs/cerrarTicketsResueltos');
+const reporteRoutes = require('./routes/reporteRoutes');
 
 const app = express();
 
@@ -23,6 +24,8 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/tickets/:ticketId/comentarios', comentarioRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/tickets/:ticketId/csat', csatRoutes);
+app.use('/api/reportes', reporteRoutes);
+
 
 // ── Ruta de salud ─────────────────────────────
 app.get('/api/health', (req, res) => {
