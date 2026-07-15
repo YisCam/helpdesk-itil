@@ -4,7 +4,7 @@ const usuarioController = {
 
   async listar(req, res) {
     try {
-      const usuarios = await usuarioModel.listar(req.usuario.empresa_id);
+      const usuarios = await usuarioModel.listar(req.usuario.empresa_id, req.usuario.rol);
       res.json(usuarios);
     } catch (error) {
       console.error('Error al listar usuarios:', error);
@@ -65,6 +65,32 @@ const usuarioController = {
       res.json({ mensaje: 'Usuario desactivado correctamente' });
     } catch (error) {
       console.error('Error al desactivar usuario:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  },
+
+
+
+  async activar(req, res) {
+    try {
+      await usuarioModel.activar(req.params.id, req.usuario.empresa_id);
+      res.json({ mensaje: 'Usuario activado correctamente' });
+    } catch (error) {
+      console.error('Error al activar usuario:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  },
+
+  async resetPassword(req, res) {
+    try {
+      const { password } = req.body;
+      if (!password || password.length < 6) {
+        return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      }
+      await usuarioModel.resetPassword(req.params.id, req.usuario.empresa_id, password);
+      res.json({ mensaje: 'Contraseña actualizada correctamente' });
+    } catch (error) {
+      console.error('Error al resetear contraseña:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
