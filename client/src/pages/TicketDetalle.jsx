@@ -96,7 +96,7 @@ function TicketDetalle() {
   useEffect(() => {
     cargarTicket();
     cargarHistorial();
-    cargarTecnicos();
+    if (puedeAsignar) cargarTecnicos();
     cargarSLADetalle();
   }, [id]);
 
@@ -353,13 +353,28 @@ function TicketDetalle() {
               </DetalleCampo>
 
               <DetalleCampo label="Asignado a">
-                <DropdownBusqueda
-                  valor={ticket.asignado_a || ''}
-                  opciones={tecnicos.map(t => ({ value: t.id, label: t.nombre }))}
-                  onChange={v => handleAsignar(v)}
-                  placeholder="Sin asignar"
-                  disabled={!puedeAsignar}
-                />
+                {puedeAsignar ? (
+                  <DropdownBusqueda
+                    valor={ticket.asignado_a || ''}
+                    opciones={tecnicos.map(t => ({ value: t.id, label: t.nombre }))}
+                    onChange={v => handleAsignar(v)}
+                    placeholder="Sin asignar"
+                    disabled={false}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {ticket.asignado_a_nombre ? (
+                      <>
+                        <div className="w-6 h-6 rounded-full bg-[#4A90D9] flex items-center justify-center text-white text-xs font-bold">
+                          {ticket.asignado_a_nombre?.charAt(0)}
+                        </div>
+                        <span className="text-sm text-gray-700">{ticket.asignado_a_nombre}</span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-gray-400">Sin asignar</span>
+                    )}
+                  </div>
+                )}
               </DetalleCampo>
 
               <DetalleCampo label="Creado por">
