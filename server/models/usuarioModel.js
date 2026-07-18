@@ -61,16 +61,16 @@ const usuarioModel = {
 
   async desactivar(id, empresa_id) {
     await pool.query(
-      'UPDATE usuarios SET activo = 0 WHERE id = ? AND empresa_id = ?',
-      [id, empresa_id]
+      'UPDATE usuarios SET activo = 0 WHERE id = ?',
+      [id]
     );
   },
 
 
   async activar(id, empresa_id) {
     await pool.query(
-      'UPDATE usuarios SET activo = 1 WHERE id = ? AND empresa_id = ?',
-      [id, empresa_id]
+      'UPDATE usuarios SET activo = 1 WHERE id = ?',
+      [id]
     );
   },
 
